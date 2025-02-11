@@ -6,7 +6,22 @@ from sqlalchemy import MetaData
 metadata = MetaData()
 db = SQLAlchemy(metadata=metadata)
 
-class Employee(db.Model):
+class User(db.Model, SerializerMixin):
+    __tablename__ = 'users'
+
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(255), nullable=False, unique=True)
+    password_hash = db.Column(db.String(10000), nullable=False)
+    role = db.Column(db.String(255), nullable=False)
+    employee_id = db.Column(db.Integer, db.ForeignKey("employees.employee_id"), unique=True)
+
+    #Relationships
+    #user and the employee will have a one to one relationship the user can be either the staff or the admin of which both of them are employees
+    employee = db.relationship('Employee',back_populates = 'user')
+
+
+class Employee(db.Model, SerializerMixin):
     __tablename__ = 'employees'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -21,14 +36,17 @@ class Employee(db.Model):
     position = db.Column(db.String(255), nullable=False)
     salary = db.Column(db.Float(), nullable=False)
 
-class Department(db.Model):
+#Relationship
+user = db.relationship('User', back_populates='employee')
+
+class Department(db.Model, SerializerMixin):
     __tablename__ = 'departments'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), nullable=False, unique=True)
     description = db.Column(db.String(255), nullable=False)
 
-class Payroll(db.Model):
+class Payroll(db.Model, SerializerMixin):
     __tablename__ = 'payroll'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -41,7 +59,7 @@ class Payroll(db.Model):
     bonuses = db.Column(db.Float, default=0.0)
     net_salary = db.Column(db.Float, nullable=False, default=0.0)
 
-class Attendance(db.Model):
+class Attendance(db.Model, SerializerMixin):
     __tablename__ = 'attendances'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -51,7 +69,7 @@ class Attendance(db.Model):
     status = db.Column(db.String(100), nullable=False)
 
 
-class Leave(db.Model):
+class Leave(db.Model, SerializerMixin):
     __tablename__ = 'leaves'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -62,7 +80,7 @@ class Leave(db.Model):
     approved_by = db.Column(db.String(100))
     approved_date = db.Column(db.Date())
 
-class Tax(db.Model):
+class Tax(db.Model, SerializerMixin):
     __tablename__ = 'taxes'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -71,7 +89,7 @@ class Tax(db.Model):
     year = db.Column(db.Integer, nullable=False)
 
 
-class Bonus(db.Model):
+class Bonus(db.Model, SerializerMixin):
     __tablename__ = 'bonuses'
 
     id = db.Column(db.Integer, primary_key=True)
