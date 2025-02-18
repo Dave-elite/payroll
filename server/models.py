@@ -206,3 +206,17 @@ class Bonus(db.Model, SerializerMixin):
     
     # Serialize rules
     serialize_rules = ('-employee',)
+
+class TokenBlacklist(db.Model, SerializerMixin):
+    """
+    Token blacklist model for managing JWT tokens.
+    this models will store the tokens that are no longer valid
+    """
+    __tablename__ = 'token_blacklist'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    token = db.Column(db.String(500), unique=True, nullable=False)
+    revoked_at = db.Column(db.Datetime, default=datetime.utcnow, nullable=False)
+
+    # Serialize rules
+    serialize_rules = ('-revoked_at',)
