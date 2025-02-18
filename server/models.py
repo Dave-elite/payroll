@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy_serializer import SerializerMixin
 from sqlalchemy import MetaData
 from sqlalchemy.orm import validates
-from datetime import datetime, utcnow
+from datetime import datetime
 import re
 
 metadata = MetaData()
@@ -63,8 +63,9 @@ class Employee(db.Model, SerializerMixin):
 
     # Relationships
     user = db.relationship('User', back_populates='employee')
-    department = db.relationship('Department', back_populates='employees')
+    department = db.relationship('Department', foreign_keys=[department_id], back_populates='employees')
     supervisor = db.relationship('Employee', remote_side=[employee_id], backref='subordinates')
+    managed_department = db.relationship('Department', back_populates='manager', foreign_keys='Department.manager_id')
     payrolls = db.relationship('Payroll', back_populates='employee', cascade='all, delete-orphan')
     attendances = db.relationship('Attendance', back_populates='employee', cascade='all, delete-orphan')
     leaves = db.relationship('Leave', back_populates='employee', cascade='all, delete-orphan')
@@ -73,7 +74,8 @@ class Employee(db.Model, SerializerMixin):
 
     # Serialize rules to prevent circular references
     serialize_rules = ('-user', '-department', '-supervisor', '-subordinates', 
-                      '-payrolls', '-attendances', '-leaves', '-tax_records', '-bonuses')
+                      '-payrolls', '-attendances', '-leaves', '-tax_records', 
+                      '-bonuses', '-managed_department')
 
     @validates('email', 'phone')
     def validate_fields(self, key, value):
@@ -101,8 +103,10 @@ class Department(db.Model, SerializerMixin):
     manager_id = db.Column(db.Integer, db.ForeignKey('employees.employee_id'))
     
     # Relationships
-    employees = db.relationship('Employee', back_populates='department')
-    manager = db.relationship('Employee', foreign_keys=[manager_id])
+    employees = db.relationship('Employee', back_populates='department', 
+                              foreign_keys='Employee.department_id')
+    manager = db.relationship('Employee', back_populates='managed_department',
+                            foreign_keys=[manager_id])
     
     # Serialize rules
     serialize_rules = ('-employees', '-manager')
