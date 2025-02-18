@@ -14,6 +14,7 @@ load_dotenv()
 # Initialize Flask app
 app = Flask(__name__)
 
+
 # Enable CORS for all routes
 CORS(app, supports_credentials=True)
 
