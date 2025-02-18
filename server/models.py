@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy_serializer import SerializerMixin
 from sqlalchemy import MetaData
 from sqlalchemy.orm import validates
-from datetime import datetime
+from datetime import datetime, utcnow
 import re
 
 metadata = MetaData()
@@ -216,7 +216,7 @@ class TokenBlacklist(db.Model, SerializerMixin):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     token = db.Column(db.String(500), unique=True, nullable=False)
-    revoked_at = db.Column(db.Datetime, default=datetime.utcnow, nullable=False)
+    revoked_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
     # Serialize rules
     serialize_rules = ('-revoked_at',)
