@@ -19,7 +19,7 @@ class User(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(255), nullable=False, unique=True)
-    password_hash = db.Column(db.String(10000), nullable=False)
+    password = db.Column(db.String(10000), nullable=False)
     role = db.Column(db.String(255), nullable=False)
     employee_id = db.Column(db.Integer, db.ForeignKey("employees.employee_id"), unique=True)
     
@@ -165,7 +165,7 @@ class Leave(db.Model, SerializerMixin):
     leave_type = db.Column(db.String(100), nullable=False)
     start_date = db.Column(db.Date(), nullable=False)
     end_date = db.Column(db.Date(), nullable=False)
-    status = db.Column(db.String(100), nullable=False)
+    status = db.Column(db.String(100), nullable=False, default='Pending')
     
     # Relationship with Employee
     employee = db.relationship('Employee', back_populates='leaves')
