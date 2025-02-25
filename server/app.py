@@ -7,6 +7,7 @@ from flask_restful import Api
 from models import db, TokenBlacklist
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
+from Resources.auth import UserResource
 
 # Load environment variables
 load_dotenv()
@@ -116,7 +117,7 @@ def initialize_database():
 # etc...
 
 # Add resources to API
-# api.add_resource(UserRegistration, '/register')
+api.add_resource(UserResource, '/register')
 # api.add_resource(UserLogin, '/login')
 # api.add_resource(UserLogout, '/logout')
 # api.add_resource(TokenRefresh, '/refresh')
