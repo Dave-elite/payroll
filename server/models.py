@@ -21,7 +21,7 @@ class User(db.Model, SerializerMixin):
     username = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(255), nullable=False, unique=True)
     password = db.Column(db.String(10000), nullable=False)
-    role = db.Column(db.String(255), nullable=False)
+    role = db.Column(db.String(50), nullable=False, default='employee')  # Added default role
     employee_id = db.Column(db.Integer, db.ForeignKey("employees.employee_id"), unique=True)
     
     # One-to-One relationship with Employee
@@ -36,6 +36,18 @@ class User(db.Model, SerializerMixin):
         if not re.match(pattern, value):
             raise ValueError(f"{value} is not a valid email address")
         return value
+
+    def assign_role(self):
+        """
+        Automatically assign role based on employee position
+        """
+        if self.employee:
+            position_to_role = {
+                'manager': 'manager',
+                'hr': 'hr',
+                'admin': 'admin'
+            }
+            self.role = position_to_role.get(self.employee.position.lower(), 'employee')
 
 class Employee(db.Model, SerializerMixin):
     """
@@ -212,9 +224,7 @@ class Bonus(db.Model, SerializerMixin):
     # Serialize rules
     serialize_rules = ('-employee',)
 
-from models import db, SerializerMixin
-from datetime import datetime
-import uuid
+
 
 class TokenBlacklist(db.Model, SerializerMixin):
     """
