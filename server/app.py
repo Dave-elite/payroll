@@ -9,6 +9,7 @@ from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
 from Resources.auth import UserResource, LoginResource
 from Resources.attendance import AttendanceResource, AttendanceSummaryResource
+from Resources.department import DepartmentResource
 
 # Load environment variables
 load_dotenv()
@@ -122,6 +123,7 @@ api.add_resource(UserResource, '/register')
 api.add_resource(AttendanceResource, '/attendance', '/attendance/<int:id>')
 api.add_resource(LoginResource, '/login')
 api.add_resource(AttendanceSummaryResource, '/summary_attendance')
+api.add_resource(DepartmentResource, '/department')
 # api.add_resource(UserLogout, '/logout')
 # api.add_resource(TokenRefresh, '/refresh')
 # api.add_resource(EmployeeResource, '/employee/<int:employee_id>')
