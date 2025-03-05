@@ -8,7 +8,7 @@ from datetime import datetime
 
 class UserResource(Resource):
     """
-    User resource for handling user related operations.
+    User resource for handling user related operations with enhanced role management.
     """
     parser = reqparse.RequestParser()
     parser.add_argument('first_name', type=str, required=True, help='first name is required ')
@@ -23,7 +23,8 @@ class UserResource(Resource):
     parser.add_argument('salary', type=float, required=True, help='Salary is required', default=0.00)
     parser.add_argument('password', type=str, required=True, help='Password is required')
     parser.add_argument('confirm_password', type=str, required=True, help='Confirm password is required')
-    parser.add_argument('role', type=str, required=True, help='Role is required')
+    parser.add_argument('department_id', type=int, required=False, help='Department ID for managers')
+    parser.add_argument('role', type=str, required=False, help='Optional user role specification')
 
     def post(self):
         data = self.parser.parse_args()
@@ -56,6 +57,15 @@ class UserResource(Resource):
         except ValueError:
             return {'message': "Invalid date format. Use YYYY-MM-DD"}, 400
         
+        # Role mapping and determination
+        role_mapping = {
+            'admin': 'admin',
+            'manager': 'manager',
+            'hr': 'hr'
+        }
+        default_role = role_mapping.get(data['position'].lower(), 'employee')
+        user_role = data.get('role', default_role)
+
         try:
             # Create a new employee
             new_employee = Employee(
@@ -73,23 +83,45 @@ class UserResource(Resource):
             db.session.add(new_employee)
             db.session.flush()  # Get the employee_id before committing
 
-            # Create the user account - using the correct field name 'password'
+            # For manager positions, validate department assignment
+            if data['position'].lower() == 'manager':
+                # Department ID is required for managers
+                if not data.get('department_id'):
+                    return {'message': "Department ID is required for manager position"}, 400
+                
+                # Verify department exists
+                department = Department.query.filter_by(department_id=data['department_id']).first()
+                if not department:
+                    return {'message': "Invalid department ID"}, 404
+                
+                # Check if department already has a manager
+                if department.manager:
+                    return {'message': "Department already has a manager"}, 400
+                
+                # Set employee's department
+                new_employee.department_id = data['department_id']
+                
+                # Update department with new manager
+                department.manager_id = new_employee.employee_id
+
+            # Create the user account with role
             new_user = User(
                 username=display_name,
                 email=data['email'],
-                password=hashed_password,  # Changed to match the model's field name
-                role=data['role'],
-                employee_id=new_employee.employee_id
+                password=hashed_password,
+                employee_id=new_employee.employee_id,
+                role=user_role  # Explicitly set role
             )
             db.session.add(new_user)
             db.session.commit()
 
-            # Generate JWT token
+            # Generate JWT token with role
             access_token = create_access_token(
-                identity=new_user.id,
+                identity=new_user.user_id,
                 additional_claims={
                     'username': display_name,
-                    'role': data['role']
+                    'position': data['position'],
+                    'role': user_role
                 }
             )
 
@@ -97,7 +129,8 @@ class UserResource(Resource):
                 "message": "User registered successfully",
                 "access_token": access_token,
                 "username": display_name,
-                "role": data['role']
+                "position": data['position'],
+                "role": user_role
             }, 201
 
         except Exception as e:
@@ -106,7 +139,7 @@ class UserResource(Resource):
 
 class LoginResource(Resource):
     """
-    Login resource for handling user login operations.
+    Login resource for handling user login operations with role support.
     """
     parser = reqparse.RequestParser()
     parser.add_argument('email', type=str, required=True, help='Email address is required to login')
@@ -121,14 +154,26 @@ class LoginResource(Resource):
         
         # Use Bcrypt's check_password_hash instead of comparing directly
         if check_password_hash(user.password, data['password']):
-            # Use user_id directly for access token
-            access_token = create_access_token(identity=user.user_id)
+            # Get the employee's position
+            employee = Employee.query.filter_by(employee_id=user.employee_id).first()
+            
+            # Generate JWT token with additional claims including role
+            access_token = create_access_token(
+                identity=user.user_id,
+                additional_claims={
+                    'username': user.username,
+                    'position': employee.position,
+                    'role': user.role  # Include user's role
+                }
+            )
             return {
                 'access_token': access_token,
                 'user': {
                     'id': user.user_id,
                     'email': user.email,
-                    'role': user.role
+                    'position': employee.position,
+                    'username': user.username,
+                    'role': user.role  # Return role in response
                 },
                 'message': 'Logged in successfully'
             }, 200
