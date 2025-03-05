@@ -104,23 +104,25 @@ class UserResource(Resource):
             db.session.rollback()
             return {"message": f"An error occurred while registering: {str(e)}"}, 500
 
-class Login(Resource):
+class LoginResource(Resource):
     """
     Login resource for handling user login operations.
     """
     parser = reqparse.RequestParser()
-
     parser.add_argument('email', type=str, required=True, help='Email address is required to login')
     parser.add_argument('password', type=str, required=True, help='Password is required to login')
 
-    #posting the user login details
     def post(self):
         data = self.parser.parse_args()
         user = User.query.filter_by(email=data['email']).first()
+        
         if user is None:
-            return{"message": "User not found. Please create an account"}, 404
+            return {"message": "User not found. Please create an account"}, 404
+        
+        # Use Bcrypt's check_password_hash instead of comparing directly
         if check_password_hash(user.password, data['password']):
-            access_token = create_access_token(identity=user.user.id)
+            # Use user_id directly for access token
+            access_token = create_access_token(identity=user.user_id)
             return {
                 'access_token': access_token,
                 'user': {
