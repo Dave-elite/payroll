@@ -5,6 +5,7 @@ from sqlalchemy import MetaData
 from sqlalchemy.orm import validates
 from datetime import datetime
 import re
+import uuid
 
 metadata = MetaData()
 db = SQLAlchemy(metadata=metadata)
@@ -211,16 +212,27 @@ class Bonus(db.Model, SerializerMixin):
     # Serialize rules
     serialize_rules = ('-employee',)
 
+from models import db, SerializerMixin
+from datetime import datetime
+import uuid
+
 class TokenBlacklist(db.Model, SerializerMixin):
     """
     Token blacklist model for managing JWT tokens.
-    this models will store the tokens that are no longer valid
+    This model stores tokens that are no longer valid.
     """
     __tablename__ = 'token_blacklist'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    jti = db.Column(db.String(36), unique=True, nullable=True)  # Make it nullable initially
     token = db.Column(db.String(500), unique=True, nullable=False)
     revoked_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
     # Serialize rules
     serialize_rules = ('-revoked_at',)
+
+    def __init__(self, *args, **kwargs):
+        # If jti is not provided, generate a unique one
+        if 'jti' not in kwargs:
+            kwargs['jti'] = str(uuid.uuid4())
+        super().__init__(*args, **kwargs)
