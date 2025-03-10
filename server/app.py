@@ -11,6 +11,7 @@ from Resources.auth import UserResource, LoginResource
 from Resources.attendance import AttendanceResource, AttendanceSummaryResource
 from Resources.department import DepartmentResource
 from Resources.bonus import BonusResource
+from Resources.leave import LeaveResource
 
 # Load environment variables
 load_dotenv()
@@ -126,6 +127,7 @@ api.add_resource(LoginResource, '/login')
 api.add_resource(AttendanceSummaryResource, '/summary_attendance')
 api.add_resource(DepartmentResource, '/department', '/department/<int:id>')
 api.add_resource(BonusResource, '/bonus', '/bonus/<int:id>')
+api.add_resource(LeaveResource, '/leave', '/leave/<int:id>')
 # api.add_resource(UserLogout, '/logout')
 # api.add_resource(TokenRefresh, '/refresh')
 # api.add_resource(EmployeeResource, '/employee/<int:employee_id>')
