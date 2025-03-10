@@ -338,6 +338,14 @@ with app.app_context():
                     leave_type = random.choice(["Sick Leave", "Personal Leave", "Vacation", "Family Emergency"])
                     leave_status = random.choice(["Approved", "Pending"])
                     
+                    # Application date is typically a few days before the start date for planned leave
+                    # For sick leave or emergencies, it might be the same day
+                    application_offset = 0
+                    if leave_type in ["Vacation", "Personal Leave"]:
+                        application_offset = random.randint(3, 10)  # Applied 3-10 days before
+                    
+                    application_date = date - timedelta(days=application_offset)
+                    
                     # Check if there's already a leave record for this employee within this period
                     existing_leave = False
                     # Skip creating leave if it's within another leave period
@@ -346,6 +354,7 @@ with app.app_context():
                         leave = Leave(
                             employee_id=employee.employee_id,
                             leave_type=leave_type,
+                            application_date=application_date,
                             start_date=date,
                             end_date=date + timedelta(days=leave_duration-1),
                             status=leave_status
@@ -470,12 +479,17 @@ with app.app_context():
                 leave_duration = random.randint(1, 14)
                 leave_end = leave_start + timedelta(days=leave_duration-1)
                 
+                # Application date is typically 1-14 days before the start date
+                application_offset = random.randint(1, 14)
+                application_date = leave_start - timedelta(days=application_offset)
+                
                 # Leave type and status
                 leave_type = random.choice(["Vacation", "Personal Leave", "Training Leave", "Medical Leave"])
                 
                 leave = Leave(
                     employee_id=employee.employee_id,
                     leave_type=leave_type,
+                    application_date=application_date,
                     start_date=leave_start,
                     end_date=leave_end,
                     status="Approved" if leave_type == "Vacation" else "Pending"

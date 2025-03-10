@@ -176,6 +176,7 @@ class Leave(db.Model, SerializerMixin):
     leave_id = db.Column(db.Integer, primary_key=True)
     employee_id = db.Column(db.Integer, db.ForeignKey('employees.employee_id'), nullable=False)
     leave_type = db.Column(db.String(100), nullable=False)
+    application_date = db.Column(db.Date(), nullable=False)
     start_date = db.Column(db.Date(), nullable=False)
     end_date = db.Column(db.Date(), nullable=False)
     status = db.Column(db.String(100), nullable=False, default='Pending')
