@@ -159,6 +159,7 @@ class PayrollResource(Resource):
             # Prepare response with employee details
             response = payroll.to_dict()
             response['employee_name'] = f"{employee.first_name} {employee.last_name}"
+            response['message'] = 'Payroll record added successfully'
             
             return response, 201
         
@@ -168,13 +169,19 @@ class PayrollResource(Resource):
 
     @jwt_required()
     def put(self, id):
-        # Check if user is admin (only admins can update payroll records)
+        # Get current user's identity and claims
+        current_user_id = get_jwt_identity()
         claims = get_jwt()
-        is_admin = claims.get('is_admin', False)
+        # Get the current user
+        current_user = User.query.get(current_user_id)
+        if not current_user:
+            return {'message': 'User not found'}, 404
+
+        # Check if user is admin
+        is_admin = current_user.role == 'admin'
         
         if not is_admin:
-            return {'message': 'Access denied. Only admins can update payroll records'}, 403
-            
+            return {'message': 'Access denied. Only admins can create payroll records'}, 403
         # For PUT we'll create a different parser that uses employee_id
         put_parser = reqparse.RequestParser()
         put_parser.add_argument('employee_id', type=int, required=True, help='Employee ID is required')
@@ -223,6 +230,7 @@ class PayrollResource(Resource):
             # Prepare response with employee details
             response = payroll.to_dict()
             response['employee_name'] = f"{employee.first_name} {employee.last_name}"
+            response['message'] = 'Payroll record updated successfully'
             
             return response, 200
         
@@ -232,13 +240,19 @@ class PayrollResource(Resource):
 
     @jwt_required()
     def patch(self, id):
-        # Check if user is admin (only admins can update payroll records)
+        # Get current user's identity and claims
+        current_user_id = get_jwt_identity()
         claims = get_jwt()
-        is_admin = claims.get('is_admin', False)
+        # Get the current user
+        current_user = User.query.get(current_user_id)
+        if not current_user:
+            return {'message': 'User not found'}, 404
+
+        # Check if user is admin
+        is_admin = current_user.role == 'admin'
         
         if not is_admin:
-            return {'message': 'Access denied. Only admins can update payroll records'}, 403
-            
+            return {'message': 'Access denied. Only admins can create payroll records'}, 403
         parser = reqparse.RequestParser()
         parser.add_argument('employee_id', type=int)
         parser.add_argument('pay_date', type=str)
@@ -298,7 +312,7 @@ class PayrollResource(Resource):
             response = payroll.to_dict()
             if payroll.employee:
                 response['employee_name'] = f"{payroll.employee.first_name} {payroll.employee.last_name}"
-            
+            response['message'] = 'Payroll record updated successfully'
             return response, 200
         
         except Exception as e:
@@ -307,13 +321,19 @@ class PayrollResource(Resource):
 
     @jwt_required()
     def delete(self, id):
-        # Check if user is admin (only admins can delete payroll records)
+        # Get current user's identity and claims
+        current_user_id = get_jwt_identity()
         claims = get_jwt()
-        is_admin = claims.get('is_admin', False)
+        # Get the current user
+        current_user = User.query.get(current_user_id)
+        if not current_user:
+            return {'message': 'User not found'}, 404
+
+        # Check if user is admin
+        is_admin = current_user.role == 'admin'
         
         if not is_admin:
-            return {'message': 'Access denied. Only admins can delete payroll records'}, 403
-            
+            return {'message': 'Access denied. Only admins can create payroll records'}, 403
         try:
             payroll = Payroll.query.filter_by(payroll_id=id).first()
             if not payroll:
